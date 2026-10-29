@@ -19,6 +19,7 @@ role before acting:
 - [Review cadence](.agents/review-cadence.md): review unit and final gate.
 - [Context and efficiency](.agents/context-efficiency.md): reads, handoffs and closeout.
 - [Delivery state](.agents/delivery-state.md): queue, artifact homes and role updates.
+- [Workflow graph](.agents/workflow-graph.md): the only delivery router, checkpoint schema, and interrupts.
 
 For story work, read [delivery state](.agents/delivery-state.md) and the parent
 README's execution queue first. Load the requested role's skill, relevant epic,

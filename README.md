@@ -65,6 +65,24 @@ repo, then run `./install.sh --force <repo>` on installed repos. Files you
 customized per project (AGENTS.md, epic/story docs, queue) are separate copies,
 so `--force` does not touch them — but confirm with `--dry-run` first.
 
+## Delivery graph
+
+`.agents/workflow-graph.md` is the only delivery router. Its YAML fence and the
+prose edge table are the same contract; a runner test fails if they diverge.
+In-session autopilot walks that table. The local runner executes the same fence
+with LangGraph and does not add a model key, LangSmith, or a hosted graph service.
+
+In an OpenCode session for the target repo, run:
+
+```text
+/autopilot
+/autopilot SP-1
+```
+
+That selects the autopilot agent and follows the graph. A named story is only
+an entry hint. The optional local runner is for unattended OpenCode dispatch;
+it is not the normal start.
+
 ## Per-repo wiring (first install)
 
 1. Run the installer.

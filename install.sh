@@ -77,13 +77,23 @@ while IFS= read -r -d '' src; do
   install_file "$src" "$TARGET/$rel"
 done < <(find "$KIT" -type f -print0)
 
-# 2. Documentation templates — seed only, never stomp an existing docs setup
+# 2. Documentation templates — seed only, never stomp an existing docs setup.
+# --force updates kit role files, not project epics, artifacts, or the Jira ledger.
+seed_file() {
+  local src="$1" dst="$2"
+  if [[ -e "$dst" ]]; then
+    echo "  skip  ${dst#$TARGET/} (project file — not replaced)"
+    skipped=$((skipped + 1))
+    return
+  fi
+  install_file "$src" "$dst"
+}
 [[ -f "$TEMPLATES/docs/epics/README.md" ]] && \
-  install_file "$TEMPLATES/docs/epics/README.md" "$TARGET/docs/epics/README.md"
+  seed_file "$TEMPLATES/docs/epics/README.md" "$TARGET/docs/epics/README.md"
 [[ -f "$TEMPLATES/docs/artifacts/README.md" ]] && \
-  install_file "$TEMPLATES/docs/artifacts/README.md" "$TARGET/docs/artifacts/README.md"
+  seed_file "$TEMPLATES/docs/artifacts/README.md" "$TARGET/docs/artifacts/README.md"
 [[ -f "$TEMPLATES/docs/jira-sync/README.md" ]] && \
-  install_file "$TEMPLATES/docs/jira-sync/README.md" "$TARGET/docs/jira-sync/README.md"
+  seed_file "$TEMPLATES/docs/jira-sync/README.md" "$TARGET/docs/jira-sync/README.md"
 
 # 3. Tool entry points — only when the target has none
 for entry in AGENTS.md CLAUDE.md; do

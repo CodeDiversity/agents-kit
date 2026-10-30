@@ -12,7 +12,9 @@
     "lint-kit": "tsx src/lint-kit.ts",
     "typecheck": "tsc --noEmit",
     "start": "tsx src/cli.ts",
-    "render-graph": "tsx src/render-graph.ts"
+    "render-graph": "tsx src/render-graph.ts",
+    "status": "tsx src/cli.ts status",
+    "watch": "tsx src/cli.ts watch"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.5.3",

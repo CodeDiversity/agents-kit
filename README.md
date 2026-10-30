@@ -77,6 +77,20 @@ so `--force` does not touch them — but confirm with `--dry-run` first.
 `--force` also removes legacy `studypilot-*` skill directories left behind by
 older installs (skills are named by role since the placeholder rename).
 
+## Verify
+
+Kit sources carry an integrity lint alongside the runner test suite:
+
+```bash
+cd runner && npm run lint-kit && npm run typecheck && npm test
+```
+
+`lint-kit` checks statically that the workflow-graph YAML fence, prose edge
+table and interrupt table agree, every agent/skill reference and role across
+Codex, Vibe and OpenCode rosters resolves, graph `writes:` scopes stay on
+their sanctioned surface, and the kit manifest exists. GitHub Actions
+(`.github/`) runs all three on push.
+
 ## Delivery graph
 
 `.agents/workflow-graph.md` is the only delivery router. Its YAML fence and the

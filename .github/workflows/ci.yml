@@ -1,0 +1,24 @@
+name: CI
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+
+jobs:
+  kit-and-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: runner/package-lock.json
+      - name: Install runner dependencies
+        run: npm ci --prefix runner
+      - name: Lint kit integrity
+        run: npm run lint-kit --prefix runner
+      - name: Typecheck runner
+        run: npm run typecheck --prefix runner
+      - name: Test runner
+        run: npm test --prefix runner

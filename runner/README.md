@@ -9,6 +9,7 @@ permissions.
 
 ```bash
 npm test
+npm run lint-kit              # static integrity checks for kit/ + templates/ sources
 ./bin/agents-kit status --repo /path/to/repo --parent SP-1
 ./bin/agents-kit run --repo /path/to/repo --parent SP-1
 ./bin/agents-kit resume --repo /path/to/repo --answer "the decision"

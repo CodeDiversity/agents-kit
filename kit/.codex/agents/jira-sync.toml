@@ -1,5 +1,6 @@
 name = "jira-sync"
 description = "Push and pull {{PROJECT}} stories, maintain a repo sync ledger, and prune reviewed completed specifications."
+sandbox_mode = "workspace-write"
 developer_instructions = """
 Read and follow .agents/skills/jira-sync/SKILL.md.
 Read .agents/delivery-state.md and affected parent execution queues first.

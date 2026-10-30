@@ -86,6 +86,7 @@ export interface DeliveryState {
   };
   resume: string;
   judgmentAttempts: number;
+  malformedJudgmentAttempts: number;
   readmePath: string;
 }
 

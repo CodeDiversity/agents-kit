@@ -1,6 +1,10 @@
 ---
 description: Refines a {{PROJECT}} frontend story's UI/UX in place — layout, components, states, accessibility, responsive behavior and copy — grounded in the actual frontend code; asks clarifying questions first
 mode: all
+permissions:
+  - action: shell
+    resource: "*"
+    effect: deny
 ---
 
 Read .agents/delivery-state.md and the parent README execution queue first; use its active/next task and artifact paths. Preserve this role's write limits.

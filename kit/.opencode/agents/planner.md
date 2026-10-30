@@ -1,6 +1,10 @@
 ---
 description: {{PROJECT}} planner: split epics into small, testable stories, maintain docs-only plans, audit requirement coverage, and sync Jira when authorized
 mode: all
+permissions:
+  - action: shell
+    resource: "*"
+    effect: deny
 ---
 
 Read .agents/delivery-state.md and the parent README execution queue first; use its active/next task and artifact paths. Preserve this role's write limits.

@@ -1,5 +1,6 @@
 name = "autopilot"
 description = "Coordinate {{PROJECT}} delivery from any stage through final parent approval, with a fresh isolated context for every specialist task."
+sandbox_mode = "workspace-write"
 developer_instructions = """
 Read and follow .agents/skills/autopilot/SKILL.md before acting.
 The delivery router is .agents/workflow-graph.md; do not invent a second one.

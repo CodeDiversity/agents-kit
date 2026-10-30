@@ -1,6 +1,10 @@
 ---
 description: Refines a {{PROJECT}} story ticket in place into a technical, implementation-ready ticket, grounded in the actual codebase; asks clarifying questions first
 mode: all
+permissions:
+  - action: shell
+    resource: "*"
+    effect: deny
 ---
 
 Read .agents/delivery-state.md and the parent README execution queue first; use its active/next task and artifact paths. Preserve this role's write limits.

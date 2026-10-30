@@ -1,11 +1,17 @@
 ---
-description: Coordinate StudyPilot delivery from any stage through final parent approval, with a fresh isolated context for every specialist task
+description: Coordinate {{PROJECT}} delivery from any stage through final parent approval, with a fresh isolated context for every specialist task
 mode: all
 ---
 
-Read and follow `.agents/skills/studypilot-autopilot/SKILL.md` before acting.
+Read and follow `.agents/skills/autopilot/SKILL.md` before acting.
 The delivery router is `.agents/workflow-graph.md`; do not invent a second one.
 Read `.agents/delivery-state.md` and the parent README execution queue first.
+
+Before every specialist spawn, save the parent README `## Autopilot` checkpoint
+with `version: 1`, `active_dispatch.role` set to that specialist, and
+`status: pending`. OpenCode rejects the spawn until that section is on disk.
+A chat claim that the graph was followed is not the checkpoint. Do not write
+story or epic files yourself.
 
 An explicit autopilot request covers the enclosing parent through final review
 and fixes, subject to explicit user limits and existing permissions. Coordinate

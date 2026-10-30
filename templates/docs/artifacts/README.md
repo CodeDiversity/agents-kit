@@ -57,10 +57,10 @@ Do not duplicate records or rename directories just because a Jira key appears.
   and saves it before completion sync; the coordinator commits it and handles
   permitted verbatim fallback persistence. Regenerate for a changed final scope,
   preserving prior committed versions. See the
-  [final walkthrough gate](../../.agents/skills/studypilot-reviewer/SKILL.md#final-user-walkthrough).
+  [final walkthrough gate](../../.agents/skills/reviewer/SKILL.md#final-user-walkthrough).
 
 The Jira-sync role may remove a completed story specification only under its
-[prune gates](../../.agents/skills/studypilot-jira-sync/SKILL.md), preserving this
+[prune gates](../../.agents/skills/jira-sync/SKILL.md), preserving this
 folder, parent delivery READMEs, contracts, traceability and all artifacts. Its
 [ledger](../jira-sync/README.md) retains identity, recovery pointers and tombstones.
 

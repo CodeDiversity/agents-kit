@@ -25,19 +25,28 @@ only the file format differs. The substance lives in `.agents/skills/**` and
 
 ```bash
 # from the kit directory
-./install.sh /path/to/target-repo      # install
-./install.sh --dry-run /path/to/repo   # preview
-./install.sh --force  /path/to/repo    # update existing installed files
+./install.sh /path/to/target-repo              # install
+./install.sh --dry-run /path/to/repo           # preview
+./install.sh --force  /path/to/repo            # update existing installed files
+./install.sh --project "X" /path/to/repo       # set the project display name
+./install.sh --wizard /path/to/repo           # also fill docs/epics/README.md interactively
 ```
+
+The project display name defaults to `name` in `kit/kit.toml`. The installer
+substitutes the `{{PROJECT}}`, `{{PROJECT_lower}}` and `{{PROJECT_upper}}`
+placeholders in every copied or seeded file, so installed agents, skills and
+workflow docs read naturally without any project-specific kit edits.
 
 What it does:
 
-1. Copies `kit/` into the repo root: `.codex/`, `.vibe/`, `.opencode/`,
+1. Removes legacy `studypilot-*` skill directories on `--force` (skills are
+   named by role since the placeholder rename).
+2. Copies `kit/` into the repo root: `.codex/`, `.vibe/`, `.opencode/`,
    `.agents/` (skills + shared workflow docs).
-2. Seeds `docs/epics/README.md` (shared Definition of Done + epic index),
+3. Seeds `docs/epics/README.md` (shared Definition of Done + epic index),
    `docs/artifacts/README.md` (record layout) and `docs/jira-sync/README.md`
    (ledger stub) only where missing.
-3. Adds `AGENTS.md` / `CLAUDE.md` entry points only if the repo has none —
+4. Adds `AGENTS.md` / `CLAUDE.md` entry points only if the repo has none —
    an existing `AGENTS.md` is never overwritten (that file is project-specific):
    copy the role-routing block from `templates/AGENTS.md` into it instead.
 
@@ -48,10 +57,11 @@ agents-kit/
 ├── install.sh              # installer (idempotent, template-preserving)
 ├── README.md
 ├── kit/
+│   ├── kit.toml            # kit manifest (project name default; never installed)
 │   ├── .codex/agents/      # Codex role definitions (TOML)
 │   ├── .vibe/agents/       # Vibe role definitions (TOML)
 │   ├── .opencode/agents/   # OpenCode role definitions (Markdown)
-│   └── .agents/            # shared workflow docs + skills/studypilot-*
+│   └── .agents/            # shared workflow docs + skills/<role>/SKILL.md
 └── templates/              # seeded into docs/ + AGENTS.md when absent
     ├── AGENTS.md
     ├── CLAUDE.md
@@ -64,6 +74,8 @@ Edit the file under `kit/` (or `templates/` for seeded docs), commit in this
 repo, then run `./install.sh --force <repo>` on installed repos. Files you
 customized per project (AGENTS.md, epic/story docs, queue) are separate copies,
 so `--force` does not touch them — but confirm with `--dry-run` first.
+`--force` also removes legacy `studypilot-*` skill directories left behind by
+older installs (skills are named by role since the placeholder rename).
 
 ## Delivery graph
 
@@ -85,8 +97,9 @@ it is not the normal start.
 
 ## Per-repo wiring (first install)
 
-1. Run the installer.
+1. Run the installer (`--project "Name"` sets the display name everywhere).
 2. Point `AGENTS.md` (or `CLAUDE.md`) at the roles, or adopt `templates/AGENTS.md`.
-3. Fill in `docs/epics/README.md` with the project's stack, epics and DoD.
+3. Fill in `docs/epics/README.md` with the project's stack, epics and DoD —
+   or let `--wizard` prompt for the header fields when it seeds the file.
 4. Start a feature with the planner; see `.agents/delivery-state.md` for the
    queue/artifact conventions all roles follow.

@@ -1,9 +1,9 @@
 ---
-name: studypilot-refiner
-description: Load when refining a StudyPilot story ticket into a technical, implementation-ready ticket — grounding it in the actual codebase with relevant files, test cases to add, and open questions — before implementation starts.
+name: refiner
+description: Load when refining a {{PROJECT}} story ticket into a technical, implementation-ready ticket — grounding it in the actual codebase with relevant files, test cases to add, and open questions — before implementation starts.
 ---
 
-# StudyPilot Ticket Refiner
+# {{PROJECT}} Ticket Refiner
 
 Refines a story ticket in place into a technical, implementation-ready ticket. The purpose of refinement is to surface and resolve ambiguity before implementation; asking the right questions matters more than filling every blank.
 

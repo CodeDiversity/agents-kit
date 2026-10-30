@@ -1,0 +1,14 @@
+# agents-kit manifest — read by install.sh; never copied into target repos.
+#
+# Placeholders substituted at install time:
+#   {{PROJECT}}        project display name (title case, e.g. "StudyPilot")
+#   {{PROJECT_lower}}  lowercase form ("studypilot")
+#   {{PROJECT_upper}}  uppercase form ("STUDYPILOT")
+#
+# They appear in kit/ agents, skills and workflow docs. install.sh rewrites
+# them in every copied/seeded file, so kit sources stay host-agnostic and a
+# target repo never sees a literal placeholder.
+
+[project]
+# Default display name; override per repo with: ./install.sh --project "Name"
+name = "StudyPilot"

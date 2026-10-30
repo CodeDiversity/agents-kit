@@ -1,4 +1,4 @@
-# StudyPilot story sizing
+# {{PROJECT}} story sizing
 
 Use this policy when planning, refining, reviewing, or implementing a story.
 Optimize for a cohesive, useful implementation outcome with a bounded context footprint.

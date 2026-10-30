@@ -1,11 +1,11 @@
 ---
-name: studypilot-backend
-description: Backend technical guidance for the single StudyPilot implementer when changing NestJS modules, Prisma models and migrations, REST endpoints, or scheduling domain logic.
+name: backend
+description: Backend technical guidance for the single {{PROJECT}} implementer when changing NestJS modules, Prisma models and migrations, REST endpoints, or scheduling domain logic.
 ---
 
-# StudyPilot Backend Guidance
+# {{PROJECT}} Backend Guidance
 
-Supporting guidance for the single [implementer](../studypilot-implementer/SKILL.md).
+Supporting guidance for the single [implementer](../implementer/SKILL.md).
 Follow that skill's execution/ownership rules. Loading this skill does not create
 a separate backend implementation role.
 

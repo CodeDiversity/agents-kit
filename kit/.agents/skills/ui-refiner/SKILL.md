@@ -1,9 +1,9 @@
 ---
-name: studypilot-ui-refiner
-description: Load when refining the UI/UX of a StudyPilot frontend story — deciding layout, component choice, states, accessibility, responsive behavior and copy that the ticket leaves ambiguous or suboptimal — before implementation starts.
+name: ui-refiner
+description: Load when refining the UI/UX of a {{PROJECT}} frontend story — deciding layout, component choice, states, accessibility, responsive behavior and copy that the ticket leaves ambiguous or suboptimal — before implementation starts.
 ---
 
-# StudyPilot UI/UX Refiner
+# {{PROJECT}} UI/UX Refiner
 
 Refines a frontend story ticket's UI/UX decisions in place into a concrete, implementation-ready design. Tickets often describe what a screen does but leave the elements themselves ambiguous or suboptimal — layout, component choice, states, copy. The purpose of this pass is to settle those design decisions with the user before implementation; asking the right design questions matters more than filling every blank.
 

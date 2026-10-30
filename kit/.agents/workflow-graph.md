@@ -1,6 +1,6 @@
 # Delivery workflow graph
 
-This file is the only router for StudyPilot delivery. The YAML fence is the
+This file is the only router for {{PROJECT}} delivery. The YAML fence is the
 machine contract. The table below is the same edges in the same order. If they
 disagree, the YAML wins. In-session autopilot executes this graph with the
 host's native isolated dispatch. The local runner executes the same fence with

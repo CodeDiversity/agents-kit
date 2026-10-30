@@ -1,11 +1,11 @@
 agent_type = "agent"
 display_name = "Autopilot"
-description = "Coordinate StudyPilot delivery from any stage through final parent approval, with a fresh isolated context for every specialist task."
+description = "Coordinate {{PROJECT}} delivery from any stage through final parent approval, with a fresh isolated context for every specialist task."
 safety = "safe"
-system_prompt_id = "studypilot-autopilot-agent"
+system_prompt_id = "autopilot-agent"
 
 instructions = """
-Read and follow .agents/skills/studypilot-autopilot/SKILL.md before acting.
+Read and follow .agents/skills/autopilot/SKILL.md before acting.
 The delivery router is .agents/workflow-graph.md; do not invent a second one.
 Read .agents/delivery-state.md and the parent README execution queue first.
 An explicit autopilot request covers the enclosing parent through final review

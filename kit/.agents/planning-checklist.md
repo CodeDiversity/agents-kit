@@ -33,7 +33,7 @@ Apply the **baseline checks to every epic**. Activate specialized checks **only 
 
 For every claimed **security or consistency invariant**, give a concrete counterexample: competing requests or a malicious/invalid input, the mechanism that prevents the failure, the expected losing request or rollback, and the owning child test. Do not call a transaction, a mocked test, or future implementation a proven guarantee. If the mechanism is missing, narrow the claim or flag the decision/blocker.
 
-For example, if the epic involves single-use credentials, check concurrent use of the same credential **and** distinct outstanding credentials for one account, plus concurrent issuance/revocation where relevant. If it involves access tokens, distinguish refresh revocation from access-token rejection based on actual guard behavior. These are **conditional examples**, not universal StudyPilot requirements.
+For example, if the epic involves single-use credentials, check concurrent use of the same credential **and** distinct outstanding credentials for one account, plus concurrent issuance/revocation where relevant. If it involves access tokens, distinguish refresh revocation from access-token rejection based on actual guard behavior. These are **conditional examples**, not universal {{PROJECT}} requirements.
 
 ## Quality gate and readiness
 

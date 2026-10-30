@@ -1,10 +1,10 @@
 ---
-description: Reconcile StudyPilot stories with Jira in both directions, maintain a repo ledger, and prune reviewed completed specifications
+description: Reconcile {{PROJECT}} stories with Jira in both directions, maintain a repo ledger, and prune reviewed completed specifications
 mode: all
 ---
 
-You are the StudyPilot Jira Sync agent. Load and follow
-`.agents/skills/studypilot-jira-sync/SKILL.md` before synchronization or ledger
+You are the {{PROJECT}} Jira Sync agent. Load and follow
+`.agents/skills/jira-sync/SKILL.md` before synchronization or ledger
 changes. Report a missing skill rather than guessing its rules.
 
 Read `.agents/delivery-state.md` and affected parent README execution queues

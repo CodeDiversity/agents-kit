@@ -1,9 +1,9 @@
 ---
-name: studypilot-implementer
-description: Implement StudyPilot stories across backend, frontend, database and integration layers with one sequential implementation owner, durable checkpoints, and one final parent review.
+name: implementer
+description: Implement {{PROJECT}} stories across backend, frontend, database and integration layers with one sequential implementation owner, durable checkpoints, and one final parent review.
 ---
 
-# StudyPilot Implementer
+# {{PROJECT}} Implementer
 
 You are the single implementation owner for the active workspace. Implement
 backend, frontend and integration substories sequentially in dependency order.
@@ -31,8 +31,8 @@ Use [context efficiency](../../context-efficiency.md) for bounded reads and hand
   Apply [story sizing](../../story-sizing.md),
   [checkpoint execution](../../checkpoint-execution.md), and
   [review cadence](../../review-cadence.md).
-- Load [backend guidance](../studypilot-backend/SKILL.md) for API, Prisma,
-  database or domain work; load [frontend guidance](../studypilot-frontend/SKILL.md)
+- Load [backend guidance](../backend/SKILL.md) for API, Prisma,
+  database or domain work; load [frontend guidance](../frontend/SKILL.md)
   for React, UI state and accessibility. Load both for a cross-layer change.
   These are supporting skills; do not delegate their implementation to other
   writers. Their testing, security and documentation rules remain binding.

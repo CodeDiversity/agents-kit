@@ -1,9 +1,9 @@
 ---
-name: studypilot-autopilot
-description: Use when the user requests StudyPilot autopilot through final parent approval, including entry at planning, refinement, a specific substory, integration, review, or review fixes. Ordinary single-role or single-child requests retain their original scope.
+name: autopilot
+description: Use when the user requests {{PROJECT}} autopilot through final parent approval, including entry at planning, refinement, a specific substory, integration, review, or review fixes. Ordinary single-role or single-child requests retain their original scope.
 ---
 
-# StudyPilot Autopilot
+# {{PROJECT}} Autopilot
 
 Coordinate the existing delivery roles through a passing independent parent
 review. Every specialist task gets a new, isolated context; the repository carries
@@ -15,6 +15,12 @@ fence disagree, the YAML wins. Do not add an edge in this skill. Do not launch
 the local runner, a shell, or another CLI to dispatch roles; that evades the
 host's permission model. In-session dispatch stays on the host's native
 isolated-session mechanism.
+
+Save the parent README `## Autopilot` checkpoint before spawning the specialist
+that edge names. The fence must be version 1, and `active_dispatch` must name
+that role with `status: pending`. Dispatch is rejected until the file is saved.
+Update it to `returned` after the specialist comes back, before the next spawn.
+Do not write the specialist's story, epic, or code yourself.
 
 ## Scope and ownership
 

@@ -1,9 +1,9 @@
 ---
-name: studypilot-jira-sync
-description: Use when pushing or pulling StudyPilot stories to Jira, reconciling tracker drift, inspecting the sync ledger, or removing reviewed story files after synchronization.
+name: jira-sync
+description: Use when pushing or pulling {{PROJECT}} stories to Jira, reconciling tracker drift, inspecting the sync ledger, or removing reviewed story files after synchronization.
 ---
 
-# StudyPilot Jira Sync
+# {{PROJECT}} Jira Sync
 
 Reconcile Jira and local specifications while preserving human edits, execution
 evidence and the identity of removed stories. This is an on-demand agent workflow,
@@ -55,7 +55,7 @@ Inventory local IDs/keys and in-scope Jira stories on bootstrap. Reuse existing
 epic and legacy parent keys; coordination summaries never receive duplicate
 implementation issues. Each implementation child has a distinct issue. Keep stable
 local IDs/paths; Jira keys are metadata. Search exact keys and unique stable-ID
-markers in scope before creating. Use `StudyPilot-ID: <id>` in a supported
+markers in scope before creating. Use `{{PROJECT}}-ID: <id>` in a supported
 managed description section or agreed field. Ambiguous or duplicate matches block
 the item; title similarity alone cannot establish identity.
 

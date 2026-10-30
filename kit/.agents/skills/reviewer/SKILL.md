@@ -1,9 +1,9 @@
 ---
-name: studypilot-reviewer
-description: Review StudyPilot plans before implementation or completed stories before sign-off, including final user-facing code explanations and manual test walkthroughs in ordinary and autopilot reviews.
+name: reviewer
+description: Review {{PROJECT}} plans before implementation or completed stories before sign-off, including final user-facing code explanations and manual test walkthroughs in ordinary and autopilot reviews.
 ---
 
-# StudyPilot Review Agent
+# {{PROJECT}} Review Agent
 
 ## Graph node
 

@@ -30,12 +30,22 @@ only the file format differs. The substance lives in `.agents/skills/**` and
 ./install.sh --force  /path/to/repo            # update existing installed files
 ./install.sh --project "X" /path/to/repo       # set the project display name
 ./install.sh --wizard /path/to/repo           # also fill docs/epics/README.md interactively
+./install.sh --only opencode /path/to/repo    # install a single host's agents
+./install.sh --check /path/to/repo             # report drift between install, manifest and kit
+./install.sh --diff /path/to/repo              # unified diffs of installed files vs kit sources
+./install.sh --uninstall /path/to/repo         # remove kit-owned files recorded in the manifest
 ```
 
 The project display name defaults to `name` in `kit/kit.toml`. The installer
 substitutes the `{{PROJECT}}`, `{{PROJECT_lower}}` and `{{PROJECT_upper}}`
 placeholders in every copied or seeded file, so installed agents, skills and
 workflow docs read naturally without any project-specific kit edits.
+
+Every install records a baseline in `.agents/.kit-manifest` — the project
+name, the kit source commit, and the sha256 of each written file. `--check`,
+`--diff` and `--uninstall` read that baseline (so a pre-manifest install
+needs one plain `install` or `--force` run to record it first), and exit 0
+when clean, 1 on drift or differences, 2 when they cannot run.
 
 What it does:
 
@@ -74,8 +84,15 @@ Edit the file under `kit/` (or `templates/` for seeded docs), commit in this
 repo, then run `./install.sh --force <repo>` on installed repos. Files you
 customized per project (AGENTS.md, epic/story docs, queue) are separate copies,
 so `--force` does not touch them — but confirm with `--dry-run` first.
-`--force` also removes legacy `studypilot-*` skill directories left behind by
-older installs (skills are named by role since the placeholder rename).
+`--force` also removes any kit-owned file the kit no longer ships, and
+cleans up legacy `studypilot-*` skill directories left behind by older
+installs (skills are named by role since the placeholder rename).
+
+Use `./install.sh --check <repo>` to see what drifted and `--diff` for the
+full hunks before committing to `--force` — both exit 1 on findings so they
+fit into a CI gate. `--uninstall` removes just the kit-owned files recorded
+in `.agents/.kit-manifest` (project surface: AGENTS.md, docs/**, entry points
+are always kept).
 
 ## Verify
 

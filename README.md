@@ -100,13 +100,18 @@ Kit sources carry an integrity lint alongside the runner test suite:
 
 ```bash
 cd runner && npm run lint-kit && npm run typecheck && npm test
+npm run render-graph -- --write   # regenerate kit/docs/workflow-graph.md from the fence
 ```
 
 `lint-kit` checks statically that the workflow-graph YAML fence, prose edge
 table and interrupt table agree, every agent/skill reference and role across
 Codex, Vibe and OpenCode rosters resolves, graph `writes:` scopes stay on
 their sanctioned surface, and the kit manifest exists. GitHub Actions
-(`.github/`) runs all three on push.
+(`.github/`) runs lint, typecheck and test on push.
+
+See `docs/autopilot-walkthrough.md` for an end-to-end narrative of one
+parent-review unit from `/autopilot SP-1` to closeout, and
+`kit/docs/workflow-graph.md` for the rendered delivery graph.
 
 ## Delivery graph
 

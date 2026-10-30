@@ -11,7 +11,8 @@
     "test": "node --import tsx --test test/*.ts",
     "lint-kit": "tsx src/lint-kit.ts",
     "typecheck": "tsc --noEmit",
-    "start": "tsx src/cli.ts"
+    "start": "tsx src/cli.ts",
+    "render-graph": "tsx src/render-graph.ts"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.5.3",

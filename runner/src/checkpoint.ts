@@ -203,10 +203,57 @@ export function readCheckpoint(readmePath: string): { markdown: string; state: D
 }
 
 export function writeCheckpoint(readmePath: string, state: DeliveryState, repo?: string): void {
-  const markdown = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, "utf8") : "";
-  const next = upsertSection(markdown, serializeCheckpoint(state));
-  fs.writeFileSync(readmePath, next);
-  if (repo) appendRunLog(repo, state);
+  const lockPath = `${readmePath}.autopilot.lock`;
+  const fd = acquireLock(lockPath);
+  try {
+    const markdown = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, "utf8") : "";
+    const next = upsertSection(markdown, serializeCheckpoint(state));
+    fs.writeFileSync(readmePath, next);
+    if (repo) appendRunLog(repo, state);
+  } finally {
+    try { fs.closeSync(fd); } catch { /* ignore */ }
+    try { fs.unlinkSync(lockPath); } catch { /* ignore */ }
+  }
+}
+
+function acquireLock(lockPath: string, timeoutMs = 30000): number {
+  const start = Date.now();
+  while (true) {
+    try {
+      const fd = fs.openSync(lockPath, "wx");
+      fs.writeFileSync(fd, String(process.pid));
+      return fd;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code !== "EEXIST") throw err;
+      // Stale lock from a dead process: reclaim it.
+      try {
+        const pid = Number(fs.readFileSync(lockPath, "utf8").trim());
+        if (pid > 0 && !isProcessAlive(pid)) {
+          fs.unlinkSync(lockPath);
+          continue;
+        }
+      } catch {
+        // Lock file vanished between checks; retry.
+        continue;
+      }
+      if (Date.now() - start > timeoutMs) {
+        throw new Error(`Timed out waiting for checkpoint lock: ${lockPath}`);
+      }
+      // Short busy-wait; checkpoint writes are fast.
+      const until = Date.now() + 25;
+      while (Date.now() < until) { /* spin */ }
+    }
+  }
+}
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return (err as NodeJS.ErrnoException).code === "EPERM";
+  }
 }
 
 function appendRunLog(repo: string, state: DeliveryState): void {

@@ -13,7 +13,13 @@ npm run lint-kit              # static integrity checks for kit/ + templates/ so
 ./bin/agents-kit status --repo /path/to/repo --parent SP-1
 ./bin/agents-kit run --repo /path/to/repo --parent SP-1
 ./bin/agents-kit resume --repo /path/to/repo --answer "the decision"
+./bin/agents-kit log --repo /path/to/repo --parent SP-1   # dispatch timeline from the run log
 ```
+
+Limits (optional, defaults shown): `--recursion-limit 250`, `--max-judgment-attempts 2`,
+`--log-limit 50`. The LangGraph thread state is persisted to
+`.agents/runner/checkpoints.json` (file-backed checkpointer), so a crashed run
+can resume; the README `## Autopilot` section remains the human checkpoint.
 
 The target repo must already have the kit installed so role agents exist.
 `status` does not dispatch. `run` writes only the README `## Autopilot`

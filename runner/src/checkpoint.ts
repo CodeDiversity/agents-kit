@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import { parse, stringify } from "yaml";
 import type { DeliveryState, DispatchStatus, FindingOwner, PlanApproval, ReviewGate, Stage, Tri, WalkthroughGate, WriterOwnership } from "./types.js";
 
@@ -33,6 +34,7 @@ export function emptyState(partial: Partial<DeliveryState> = {}): DeliveryState 
     blocker: { kind: "none", owner: "", question: "", answer: "" },
     resume: "",
     judgmentAttempts: 0,
+    malformedJudgmentAttempts: 0,
     readmePath: "",
   };
   return {
@@ -89,6 +91,7 @@ interface CheckpointFile {
   blocker?: DeliveryState["blocker"];
   resume?: string;
   judgment_attempts?: number;
+  malformed_judgment_attempts?: number;
 }
 
 export function serializeCheckpoint(state: DeliveryState): string {
@@ -134,6 +137,7 @@ export function serializeCheckpoint(state: DeliveryState): string {
     blocker: state.blocker,
     resume: state.resume,
     judgment_attempts: state.judgmentAttempts,
+    malformed_judgment_attempts: state.malformedJudgmentAttempts,
   }).trimEnd();
   const resume = state.resume || "Reconcile the graph and take the first matching edge.";
   return `${HEADING}\n\nResume: ${resume}\n\n\`\`\`yaml\n${body}\n\`\`\`\n`;
@@ -185,6 +189,7 @@ export function parseCheckpoint(section: string, readmePath = ""): DeliveryState
   state.blocker = { ...state.blocker, ...raw.blocker };
   state.resume = raw.resume ?? "";
   state.judgmentAttempts = raw.judgment_attempts ?? 0;
+  state.malformedJudgmentAttempts = raw.malformed_judgment_attempts ?? 0;
   state.readmePath = readmePath;
   return state;
 }
@@ -197,10 +202,40 @@ export function readCheckpoint(readmePath: string): { markdown: string; state: D
   return { markdown, state, legacy: state === null };
 }
 
-export function writeCheckpoint(readmePath: string, state: DeliveryState): void {
+export function writeCheckpoint(readmePath: string, state: DeliveryState, repo?: string): void {
   const markdown = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, "utf8") : "";
   const next = upsertSection(markdown, serializeCheckpoint(state));
   fs.writeFileSync(readmePath, next);
+  if (repo) appendRunLog(repo, state);
+}
+
+function appendRunLog(repo: string, state: DeliveryState): void {
+  try {
+    const dir = path.join(repo, ".agents", "runner");
+    fs.mkdirSync(dir, { recursive: true });
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      parent: state.scope.parent,
+      stage: state.stage,
+      writer: state.writer,
+      activeDispatch: {
+        name: state.activeDispatch.name,
+        role: state.activeDispatch.role,
+        status: state.activeDispatch.status,
+        assignment: state.activeDispatch.assignment,
+      },
+      lastResult: {
+        evidence: state.lastResult.evidence,
+        scopeNote: state.lastResult.scopeNote,
+        cycles: state.lastResult.cycles,
+      },
+      resume: state.resume,
+      blocker: { kind: state.blocker.kind, question: state.blocker.question },
+    });
+    fs.appendFileSync(path.join(dir, "run.log"), `${line}\n`, "utf8");
+  } catch {
+    // Best-effort; never break a run on a log write failure.
+  }
 }
 
 export function upsertSection(markdown: string, section: string): string {

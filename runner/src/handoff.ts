@@ -51,10 +51,12 @@ export function judgePrompt(state: DeliveryState, unknown: string[]): string {
       same_findings: "unknown",
       blocker_kind: "none",
       blocker_question: "",
+      evidence: [],
     }, null, 2),
     "Use true or false for boolean gates. plan_approval is missing, findings_open, findings_awaiting_rereview, stale, ready, or unknown.",
     "review is absent, stale, fail, pass, or unknown. walkthrough is missing, stale, verified, or unknown.",
     "findings_owner is implementer, planner, none, or unknown. blocker_kind is none, material_decision, or human_evidence.",
+    "evidence must be a non-empty array of \"file:line\" citations for every gate you set.",
     "Do not contradict a missing file. If plan-review.md is absent, plan_approval is missing.",
   ].join("\n");
 }

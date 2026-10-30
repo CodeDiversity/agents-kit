@@ -17,6 +17,9 @@ interface Args {
   limits: string;
   answer: string;
   host: string;
+  recursionLimit: number;
+  maxJudgmentAttempts: number;
+  logLimit: number;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -29,6 +32,9 @@ function parseArgs(argv: string[]): Args {
     limits: "",
     answer: "",
     host: "opencode",
+    recursionLimit: 250,
+    maxJudgmentAttempts: 2,
+    logLimit: 50,
   };
   for (let i = 1; i < argv.length; i += 1) {
     const key = argv[i];
@@ -40,6 +46,9 @@ function parseArgs(argv: string[]): Args {
     else if (key === "--limits") args.limits = value;
     else if (key === "--answer") args.answer = value;
     else if (key === "--host") args.host = value;
+    else if (key === "--recursion-limit") args.recursionLimit = Number(value);
+    else if (key === "--max-judgment-attempts") args.maxJudgmentAttempts = Number(value);
+    else if (key === "--log-limit") args.logLimit = Number(value);
     else throw new Error(`Unknown argument ${key}`);
     i += 1;
   }
@@ -86,7 +95,7 @@ function findReadme(repo: string, parent: string): string {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  if (!["status", "run", "resume"].includes(args.command)) {
+  if (!["status", "run", "resume", "log"].includes(args.command)) {
     throw new Error("Usage: agents-kit <status|run|resume> --repo <path> [--parent <id>] [--readme <path>] [--entry <hint>] [--answer <text>] [--host opencode]");
   }
   if (!args.repo) throw new Error("--repo is required");
@@ -124,9 +133,34 @@ async function main(): Promise<void> {
     if (loaded.legacy) console.log("note: legacy Autopilot section was not a graph checkpoint; status did not rewrite it");
     return;
   }
+  if (args.command === "log") {
+    const logPath = path.join(args.repo, ".agents", "runner", "run.log");
+    if (!fs.existsSync(logPath)) {
+      console.log("no run log yet");
+      return;
+    }
+    const parent = args.parent || state.scope.parent;
+    const lines = fs.readFileSync(logPath, "utf8").split("\n").filter(Boolean);
+    const entries = lines
+      .map((line) => { try { return JSON.parse(line) as Record<string, unknown>; } catch { return null; } })
+      .filter((entry): entry is Record<string, unknown> => entry !== null && (parent === "" || entry.parent === parent));
+    const recent = entries.slice(-args.logLimit);
+    if (recent.length === 0) {
+      console.log(parent ? `no log entries for ${parent}` : "no log entries");
+      return;
+    }
+    console.log(`parent: ${parent || "(all)"}`);
+    for (const entry of recent) {
+      const ad = (entry.activeDispatch ?? {}) as Record<string, unknown>;
+      const lr = (entry.lastResult ?? {}) as Record<string, unknown>;
+      const ts = String(entry.ts ?? "");
+      console.log(`${ts}  ${String(entry.stage ?? "")}  ${String(ad.role ?? "")}/${String(ad.status ?? "")}  cycles=${String(lr.cycles ?? 0)}  ${String(lr.evidence ?? "").slice(0, 60)}`);
+    }
+    return;
+  }
   const host = await connectOpenCode();
-  const compiled = compileGraph({ spec, host, repo: args.repo });
-  const finalState = await invokeGraph(compiled, state, `${state.scope.parent}:${readme}`);
+  const compiled = compileGraph({ spec, host, repo: args.repo, recursionLimit: args.recursionLimit, maxJudgmentAttempts: args.maxJudgmentAttempts });
+  const finalState = await invokeGraph(compiled, state, `${state.scope.parent}:${readme}`, args.recursionLimit);
   const after = readCheckpoint(readme).state ?? finalState;
   if (after.stage === "complete") {
     console.log(`complete: ${after.scope.parent}`);

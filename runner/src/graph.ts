@@ -1,6 +1,6 @@
-import { Annotation, END, MemorySaver, START, StateGraph, interrupt, isGraphInterrupt } from "@langchain/langgraph";
+import { Annotation, END, START, StateGraph, interrupt, isGraphInterrupt } from "@langchain/langgraph";
 import { writeCheckpoint } from "./checkpoint.js";
-import { applyJudgment, parseJudge, pathsFromCloseout } from "./closeout.js";
+import { applyJudgment, parseJudge, validateJudge, pathsFromCloseout } from "./closeout.js";
 import { commitOwned } from "./git.js";
 import { buildHandoff, judgePrompt } from "./handoff.js";
 import { judgmentUnknowns, reconcile } from "./reconcile.js";
@@ -8,6 +8,7 @@ import { nodeById, route, toGateRecord } from "./router.js";
 import type { WorkflowSpec } from "./spec.js";
 import type { DeliveryState, SpecialistReturn } from "./types.js";
 import type { HostAdapter } from "./hosts/types.js";
+import { FileMemorySaver, checkpointerPath } from "./checkpointer.js";
 
 const GraphState = Annotation.Root({
   delivery: Annotation<DeliveryState>({ reducer: (_left, right) => right }),
@@ -17,6 +18,8 @@ export interface GraphDeps {
   spec: WorkflowSpec;
   host?: HostAdapter;
   repo: string;
+  recursionLimit?: number;
+  maxJudgmentAttempts?: number;
 }
 
 interface CompiledDeliveryGraph {
@@ -29,7 +32,7 @@ export function compileGraph(deps: GraphDeps): CompiledDeliveryGraph {
     addNode(id: string, action: (state: { delivery: DeliveryState }) => Promise<{ delivery: DeliveryState }>): unknown;
     addEdge(from: string, to: string): unknown;
     addConditionalEdges(from: string, path: (state: { delivery: DeliveryState }) => string, destinations: Record<string, string>): unknown;
-    compile(options: { checkpointer: MemorySaver }): CompiledDeliveryGraph;
+    compile(options: { checkpointer: object }): CompiledDeliveryGraph;
   };
   graph.addNode("reconcile", (state) => reconcileNode(state.delivery, deps));
   for (const node of deps.spec.nodes) {
@@ -42,7 +45,8 @@ export function compileGraph(deps: GraphDeps): CompiledDeliveryGraph {
     if (node.interrupt || node.id === "complete") graph.addEdge(node.id, END);
     else graph.addEdge(node.id, "reconcile");
   }
-  return graph.compile({ checkpointer: new MemorySaver() });
+  const checkpointer = new FileMemorySaver(checkpointerPath(deps.repo));
+  return graph.compile({ checkpointer });
 }
 
 async function reconcileNode(delivery: DeliveryState, deps: GraphDeps): Promise<{ delivery: DeliveryState }> {
@@ -75,7 +79,7 @@ async function reconcileNode(delivery: DeliveryState, deps: GraphDeps): Promise<
     };
     next.resume = next.blocker.question;
   }
-  writeCheckpoint(next.readmePath, next);
+  writeCheckpoint(next.readmePath, next, deps.repo);
   return { delivery: next };
 }
 
@@ -86,7 +90,7 @@ async function runNode(delivery: DeliveryState, nodeId: string, deps: GraphDeps)
     delivery.stage = "complete";
     delivery.resume = "Parent review passed and the walkthrough is verified. Stop within this parent.";
     delivery.activeDispatch = { ...delivery.activeDispatch, status: "none", name: "", role: "", session: "" };
-    writeCheckpoint(delivery.readmePath, delivery);
+    writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
     return { delivery };
   }
   if (specNode.interrupt) {
@@ -99,7 +103,7 @@ async function runNode(delivery: DeliveryState, nodeId: string, deps: GraphDeps)
       answer: "",
     };
     delivery.resume = delivery.blocker.question;
-    writeCheckpoint(delivery.readmePath, delivery);
+    writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
     interrupt({ kind: delivery.blocker.kind, question: delivery.blocker.question });
     return { delivery };
   }
@@ -121,16 +125,25 @@ async function judge(delivery: DeliveryState, deps: GraphDeps): Promise<Delivery
   });
   if (result.paused) return pause(delivery, result.paused.kind, result.paused.question);
   const parsed = parseJudge(result.raw);
+  const maxAttempts = deps.maxJudgmentAttempts ?? 2;
   if (!parsed) {
     delivery.judgmentAttempts += 1;
-    if (delivery.judgmentAttempts >= 2) return pause(delivery, "missing_judgment", "Two judgment passes did not return a usable gate record.");
-    writeCheckpoint(delivery.readmePath, delivery);
+    if (delivery.judgmentAttempts >= maxAttempts) return pause(delivery, "missing_judgment", "Two judgment passes did not return a usable gate record.");
+    writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
+    return delivery;
+  }
+  const validation = validateJudge(parsed, unknown);
+  if (!validation.ok) {
+    delivery.malformedJudgmentAttempts += 1;
+    if (delivery.malformedJudgmentAttempts >= 3) return pause(delivery, "malformed_judgment", validation.reason);
+    writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
     return delivery;
   }
   const merged = applyJudgment(delivery, parsed);
   merged.judgmentAttempts = 0;
+  merged.malformedJudgmentAttempts = 0;
   merged.activeDispatch = { name: task, role: "dod-auditor", status: "returned", pointer: "", session: result.sessionId, assignment: "judge" };
-  writeCheckpoint(merged.readmePath, merged);
+  writeCheckpoint(merged.readmePath, merged, deps.repo);
   return merged;
 }
 
@@ -153,7 +166,7 @@ async function dispatchSpecialist(delivery: DeliveryState, nodeId: string, deps:
   };
   delivery.stage = decision.stage;
   delivery.writer = specNode.role === "implementer" ? "held" : "none";
-  writeCheckpoint(delivery.readmePath, delivery);
+  writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
   let result;
   try {
     result = await deps.host!.dispatch({
@@ -166,12 +179,12 @@ async function dispatchSpecialist(delivery: DeliveryState, nodeId: string, deps:
   } catch (error) {
     delivery.activeDispatch.status = "not_started";
     delivery.writer = "none";
-    writeCheckpoint(delivery.readmePath, delivery);
+    writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
     throw error;
   }
   delivery.activeDispatch.session = result.sessionId;
   delivery.activeDispatch.status = "running";
-  writeCheckpoint(delivery.readmePath, delivery);
+  writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
   return applyReturn(delivery, result, specNode.role ?? nodeId, specNode.commit ?? "none");
 }
 
@@ -190,7 +203,7 @@ async function applyReturn(delivery: DeliveryState, result: SpecialistReturn, ro
     delivery.lastResult.evidence = committed.hash || delivery.lastResult.evidence;
     if (committed.status === "pending") delivery.resume = `commit pending: ${committed.reason}`;
   }
-  writeCheckpoint(delivery.readmePath, delivery);
+  writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
   return delivery;
 }
 
@@ -199,13 +212,13 @@ function pause(delivery: DeliveryState, kind: string, question: string): Deliver
   delivery.writer = delivery.activeDispatch.status === "running" ? "held" : delivery.writer;
   delivery.blocker = { kind, owner: "user", question, answer: "" };
   delivery.resume = question;
-  writeCheckpoint(delivery.readmePath, delivery);
+  writeCheckpoint(delivery.readmePath, delivery, delivery.coordinator.workspace);
   interrupt({ kind, question });
   return delivery;
 }
 
-export async function invokeGraph(compiled: CompiledDeliveryGraph, delivery: DeliveryState, threadId: string): Promise<DeliveryState> {
-  const config = { configurable: { thread_id: threadId }, recursionLimit: 250 };
+export async function invokeGraph(compiled: CompiledDeliveryGraph, delivery: DeliveryState, threadId: string, recursionLimit = 250): Promise<DeliveryState> {
+  const config = { configurable: { thread_id: threadId }, recursionLimit };
   try {
     await compiled.invoke({ delivery }, config);
   } catch (error) {

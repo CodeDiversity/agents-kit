@@ -14,6 +14,8 @@ npm run lint-kit              # static integrity checks for kit/ + templates/ so
 ./bin/agents-kit run --repo /path/to/repo --parent SP-1
 ./bin/agents-kit resume --repo /path/to/repo --answer "the decision"
 ./bin/agents-kit log --repo /path/to/repo --parent SP-1   # dispatch timeline from the run log
+./bin/agents-kit watch --repo /path/to/repo --parent SP-1  # live status (Ctrl+C to stop)
+./bin/agents-kit watch --repo /path/to/repo --parent SP-1 --once  # single snapshot
 ```
 
 Limits (optional, defaults shown): `--recursion-limit 250`, `--max-judgment-attempts 2`,

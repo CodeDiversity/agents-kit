@@ -4,7 +4,7 @@ import path from "node:path";
 import { emptyState, readCheckpoint } from "./checkpoint.js";
 import { compileGraph, invokeGraph } from "./graph.js";
 import { connectOpenCode } from "./hosts/opencode.js";
-import { reconcile } from "./reconcile.js";
+import { reconcile, parseQueue } from "./reconcile.js";
 import { route, toGateRecord } from "./router.js";
 import { resolveSpecPath, readSpecFile } from "./spec.js";
 
@@ -20,6 +20,8 @@ interface Args {
   recursionLimit: number;
   maxJudgmentAttempts: number;
   logLimit: number;
+  interval: number;
+  once: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -35,6 +37,8 @@ function parseArgs(argv: string[]): Args {
     recursionLimit: 250,
     maxJudgmentAttempts: 2,
     logLimit: 50,
+    interval: 2000,
+    once: false,
   };
   for (let i = 1; i < argv.length; i += 1) {
     const key = argv[i];
@@ -49,6 +53,8 @@ function parseArgs(argv: string[]): Args {
     else if (key === "--recursion-limit") args.recursionLimit = Number(value);
     else if (key === "--max-judgment-attempts") args.maxJudgmentAttempts = Number(value);
     else if (key === "--log-limit") args.logLimit = Number(value);
+    else if (key === "--interval") args.interval = Number(value);
+    else if (key === "--once") args.once = true;
     else throw new Error(`Unknown argument ${key}`);
     i += 1;
   }
@@ -95,7 +101,7 @@ function findReadme(repo: string, parent: string): string {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  if (!["status", "run", "resume", "log"].includes(args.command)) {
+  if (!["status", "run", "resume", "log", "watch"].includes(args.command)) {
     throw new Error("Usage: agents-kit <status|run|resume> --repo <path> [--parent <id>] [--readme <path>] [--entry <hint>] [--answer <text>] [--host opencode]");
   }
   if (!args.repo) throw new Error("--repo is required");
@@ -122,15 +128,65 @@ async function main(): Promise<void> {
     state.blocker.answer = args.answer;
     state.blocker.kind = "none";
   }
-  const decision = route(spec, toGateRecord(state));
   remember(args.repo, readme, state.scope.parent);
-  if (args.command === "status") {
-    console.log(`parent: ${state.scope.parent}`);
-    console.log(`stage: ${state.stage}`);
-    console.log(`next: ${decision.edge} → ${decision.to}${decision.assignment ? ` (${decision.assignment})` : ""}`);
-    console.log(`writer: ${state.writer}`);
-    console.log(`resume: ${decision.question || state.resume || decision.edge}`);
-    if (loaded.legacy) console.log("note: legacy Autopilot section was not a graph checkpoint; status did not rewrite it");
+  if (args.command === "status" || args.command === "watch") {
+    const render = () => {
+      const loaded2 = readCheckpoint(readme);
+      const st = loaded2.state ?? state;
+      st.readmePath = readme;
+      const dec = route(spec, toGateRecord(st));
+      const q = parseQueue(fs.readFileSync(readme, "utf8"));
+      const lines: string[] = [];
+      lines.push(`parent: ${st.scope.parent}   stage: ${st.stage}   writer: ${st.writer}`);
+      lines.push(`next: ${dec.edge} → ${dec.to}${dec.assignment ? ` (${dec.assignment})` : ""}`);
+      if (dec.question || st.resume) lines.push(`resume: ${dec.question || st.resume}`);
+      if (st.blocker.kind !== "none") lines.push(`BLOCKER [${st.blocker.kind}]: ${st.blocker.question}`);
+      lines.push(`coordinator: ${st.coordinator.branch} @ ${st.coordinator.head.slice(0, 10) || "unknown"}`);
+      if (q.rows.length > 0) {
+        lines.push("");
+        lines.push("queue:");
+        for (const row of q.rows) lines.push(`  ${row.story}  ${row.state}  ${row.nextAction || ""}`.trimEnd());
+      }
+      const logPath = path.join(args.repo, ".agents", "runner", "run.log");
+      if (fs.existsSync(logPath)) {
+        const entries = fs.readFileSync(logPath, "utf8").split("\n").filter(Boolean)
+          .map((l) => { try { return JSON.parse(l) as Record<string, unknown>; } catch { return null; } })
+          .filter((e): e is Record<string, unknown> => e !== null && (args.parent === "" || e.parent === (args.parent || st.scope.parent)))
+          .slice(-5);
+        if (entries.length > 0) {
+          lines.push("");
+          lines.push("recent dispatches:");
+          for (const e of entries) {
+            const ad = (e.activeDispatch ?? {}) as Record<string, unknown>;
+            const lr = (e.lastResult ?? {}) as Record<string, unknown>;
+            lines.push(`  ${String(e.ts ?? "").slice(11, 19)}  ${String(e.stage ?? "")}  ${String(ad.role ?? "")}/${String(ad.status ?? "")}  ${String(lr.evidence ?? "").slice(0, 40)}`);
+          }
+        }
+      }
+      return lines.join("\n");
+    };
+
+    if (args.command === "status") {
+      console.log(render());
+      if (loaded.legacy) console.log("note: legacy Autopilot section was not a graph checkpoint; status did not rewrite it");
+      return;
+    }
+
+    // watch
+    const tick = () => {
+      process.stdout.write("\x1b[2J\x1b[H");
+      console.log(render());
+      console.log("");
+      console.log("watching… (Ctrl+C to stop)");
+    };
+    tick();
+    if (args.once) return;
+    await new Promise<void>((resolve) => {
+      const timer = setInterval(tick, Math.max(500, args.interval));
+      const stop = () => { clearInterval(timer); resolve(); };
+      process.on("SIGINT", stop);
+      process.on("SIGTERM", stop);
+    });
     return;
   }
   if (args.command === "log") {

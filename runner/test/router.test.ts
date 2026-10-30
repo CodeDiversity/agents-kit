@@ -89,3 +89,21 @@ test("spec non-edges hold", () => {
     }
   }
 });
+
+test("every fenced non-edge is executable or has an explicit counterpart", () => {
+  // note-only rules are inert here by definition; each must correspond to an
+  // explicit assertion elsewhere in this file under the same intent.
+  const coveredAssertions = new Set([
+    "no_fanout", // asserted in "no edge fans out"
+  ]);
+  for (const rule of spec.non_edges) {
+    if (coveredAssertions.has(rule.id)) continue;
+    const actionable =
+      rule.expect !== undefined ||
+      rule.interrupt !== undefined ||
+      (rule.never ?? []).length > 0 ||
+      (rule.entry_hints ?? []).length > 0;
+    assert.equal(actionable, true, `non_edge ${rule.id} has no assertion; it would run inert`);
+    assert.ok(rule.given && Object.keys(rule.given).length > 0, `non_edge ${rule.id} has no given state`);
+  }
+});

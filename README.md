@@ -131,6 +131,10 @@ That selects the autopilot agent and follows the graph. A named story is only
 an entry hint. The optional local runner is for unattended OpenCode dispatch;
 it is not the normal start.
 
+## Building graphs
+
+See [docs/building-graphs.md](docs/building-graphs.md) to change the graph, add a specialist, or add a host adapter. The spec in `kit/.agents/workflow-graph.md` is the only router.
+
 ## Per-repo wiring (first install)
 
 1. Run the installer (`--project "Name"` sets the display name everywhere).
